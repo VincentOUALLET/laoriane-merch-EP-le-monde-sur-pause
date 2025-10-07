@@ -1,187 +1,149 @@
-// Configuration for the merchandise page
+// Site configuration
+const THEME_URI = window.THEME_URI || '';
 const config = {
-  "site": {
-    "title": "Le monde sur pause - Merchandise",
-    "headerTitle": "Le monde sur pause",
-    "footer": "&copy; 2025 Le monde sur pause. Tous droits réservés.",
-    "currency": "€"
+  site: {
+    title: "Laoriane - EP - Le Monde Sur Pause",
+    headerTitle: "Le monde sur pause",
+    currency: "€",
+    footer: "&copy; 2025 Le monde sur pause. Tous droits réservés."
   },
-  "navigation": {
-    "cd": "CD",
-    "carnet": "Carnet",
-    "aquarelles": "Aquarelles",
-    "bougies": "Bougies"
+  navigation: {
+    cd: "CD",
+    carnet: "Carnet",
+    aquarelles: "Aquarelles",
+    bougies: "Bougies"
   },
-  "cart": {
-    "title": "Panier",
-    "total": "Total",
-    "checkout": "Passer commande",
-    "empty": "0"
+  cart: {
+    title: "Panier",
+    empty: "0",
+    checkout: "Passer commande"
   },
-  "texts": {
-    "defaultProduct": "Produit",
-    "added": "Ajouté!",
-    "addedToCart": "Ajouté au panier!",
-    "minus": "-",
-    "plus": "+",
-    "delete": "✕"
+  texts: {
+    addedToCart: "Ajouté !",
+    added: "Ajouté au panier !",
+    plus: "+",
+    minus: "-",
+    delete: "×",
+    defaultProduct: "Produit"
   },
-  "componentTypes": {
-    "productSection": {
-      "template": "section",
-      "classes": ["product"],
-      "structure": {
-        "title": "h2",
-        "images": "div.product-images",
-        "details": "div.product-details",
-        "addToCart": "button.add-to-cart"
-      }
-    },
-    "imageGallery": {
-      "template": "div",
-      "classes": ["product-images"],
-      "structure": {
-        "images": "img.product-image"
-      }
-    },
-    "selectionDropdown": {
-      "template": "div",
-      "classes": ["color-selection"],
-      "structure": {
-        "label": "label",
-        "select": "select"
-      }
-    },
-    "radioSelection": {
-      "template": "div",
-      "classes": ["text-color"],
-      "structure": {
-        "options": "label"
-      }
-    },
-    "priceDisplay": {
-      "template": "p",
-      "classes": ["price"]
-    }
-  },
-  "products": {
-    "cd": {
-      "id": "cd",
-      "title": "CD Physique",
-      "description": "Mini-album de 6 titres. Photographie : Alicia Aubrée. Graphisme : Eva Urbany",
-      "price": 10,
-      "inCarousel": true,
-      "componentType": "productSection",
-      "images": [
+  products: {
+    cd: {
+      id: "cd",
+      title: "CD Inter",
+      description: "CD de l'album Inter.",
+      price: 10,
+      addToCartText: "Ajouter au panier",
+      images: [
         {
-          "src": "PHOTOS MERCH EP/CD RECTO.jpg",
-          "alt": "CD Recto"
+          src: THEME_URI + "/photos_merch_ep/cd_inter.jpg",
+          alt: "CD Inter recto"
         },
         {
-          "src": "PHOTOS MERCH EP/CD VERSO.jpg",
-          "alt": "CD Verso"
+          src: THEME_URI + "/photos_merch_ep/cd_inter_verso.jpg",
+          alt: "CD Inter verso"
         }
       ],
-      "addToCartText": "Ajouter au panier"
+      inCarousel: true
     },
-    "livret": {
-      "id": "livret",
-      "title": "Livret de paroles et poèmes",
-      "description": "Carnet relié à la main par Laoriane. Contient les paroles des chansons et une vingtaine de poèmes. Dimensions A6 : 10,5 x 15cm.",
-      "colorOptions": "Existe en 3 coloris : vert bleu, bordeaux, violet fleuris.",
-      "price": 15,
-      "inCarousel": true,
-      "componentType": "productSection",
-      "variants": {
+    livret: {
+      id: "livret",
+      title: "Livret de paroles et poèmes",
+      description: "Carnet contenant les paroles et poèmes.",
+      description2: "Disponible en différentes couleurs.",
+      price: 15,
+      selectionType: "dropdown",
+      selectionLabel: "Choisir la couleur",
+      addToCartText: "Ajouter au panier",
+      colorOptions: "Choisissez la couleur de votre livret.",
+      variants: {
         "vert-bleu": {
-          "name": "Vert Bleu",
-          "image": "PHOTOS MERCH EP/LIVRET DE PAROLES ET POEMES VERT BLEU.jpg"
+          name: "Vert et bleu",
+          price: 15,
+          image: THEME_URI + "/photos_merch_ep/livret_de_paroles_et_poemes_vert_bleu.jpg"
+        },
+        "violet-fleuri": {
+          name: "Violet fleuri",
+          price: 15,
+          image: THEME_URI + "/photos_merch_ep/livret_paroles_et_poemes_violet_fleuris.jpg"
         },
         "bordeaux": {
-          "name": "Bordeaux",
-          "image": "PHOTOS MERCH EP/LIVRET BORDEAU.jpg"
-        },
-        "violet-fleuris": {
-          "name": "Violet Fleuris",
-          "image": "PHOTOS MERCH EP/livret paroles et poèmes violet fleuris.jpg"
+          name: "Bordeaux",
+          price: 15,
+          image: THEME_URI + "/photos_merch_ep/livret_bordeau.jpg"
         }
       },
-      "selectionType": "dropdown",
-      "selectionLabel": "Choisir la couleur :",
-      "addToCartText": "Ajouter au panier"
+      inCarousel: true
     },
-    "aquarelles": {
-      "id": "aquarelles",
-      "title": "Aquarelles",
-      "description": "Format carte postale, A6. 6 illustrations, une par chanson.",
-      "description2": "Disponible avec la phrase écrite en noire, ou la phrase écrite en couleur. Aquarelles : Lucie Bigaud. Graphisme : Eva Urbany",
-      "price": 3,
-      "inCarousel": true,
-      "componentType": "productSection",
-      "songs": {
-        "C'était la Terre": {
-          "images": {
-            "couleur": "PHOTOS MERCH EP/Aquarelles _C_était la Terre_ - couleur.jpg",
-            "noire": "PHOTOS MERCH EP/Aquarelles _C_était la Terre_ - noire.jpg"
+    aquarelles: {
+      id: "aquarelles",
+      title: "Aquarelles",
+      description: "Aquarelles inspirées des chansons de l'album.",
+      selectionLabel: "Choisir une chanson",
+      addToCartText: "Ajouter au panier",
+      price: 3,
+      colorOption: "Couleur",
+      colorOption2: "Noire",
+      songs: {
+        "C’était la Terre": {
+          images: {
+            couleur: THEME_URI + "/photos_merch_ep/aquarelles__c_etait_la_terre__couleur.jpg",
+            noire: THEME_URI + "/photos_merch_ep/aquarelles__c_etait_la_terre__noire.jpg"
           }
         },
         "Les fils": {
-          "images": {
-            "couleur": "PHOTOS MERCH EP/Aquarelles _Les fils_ - couleur.jpg",
-            "noire": "PHOTOS MERCH EP/Aquarelles _Les fils_ - noire.jpg"
+          images: {
+            couleur: THEME_URI + "/photos_merch_ep/aquarelles__les_fils__couleur.jpg",
+            noire: THEME_URI + "/photos_merch_ep/aquarelles__les_fils__noire.jpg"
           }
         },
         "Regarder le monde de loin": {
-          "images": {
-            "couleur": "PHOTOS MERCH EP/Aquarelles _Regarder le monde de loin_ - couleur.jpg",
-            "noire": "PHOTOS MERCH EP/Aquarelles _Regarder le monde de loin_ - noire.jpg"
+          images: {
+            couleur: THEME_URI + "/photos_merch_ep/aquarelles__regarder_le_monde_de_loin__couleur.jpg",
+            noire: THEME_URI + "/photos_merch_ep/aquarelles__regarder_le_monde_de_loin__noire.jpg"
           }
         },
         "Ta lumière": {
-          "images": {
-            "couleur": "PHOTOS MERCH EP/Aquarelles _Ta lumière_ - couleur.jpg",
-            "noire": "PHOTOS MERCH EP/Aquarelles _Ta lumière_ - noire.jpg"
+          images: {
+            couleur: THEME_URI + "/photos_merch_ep/aquarelles__ta_lumiere__couleur.jpg",
+            noire: THEME_URI + "/photos_merch_ep/aquarelles__ta_lumiere__noire.jpg"
           }
         },
-        "Tant qu'y a du vent": {
-          "images": {
-            "couleur": "PHOTOS MERCH EP/Aquarelles _Tant qu_y a du vent_ - couleur.jpg",
-            "noire": "PHOTOS MERCH EP/Aquarelles _Tant qu_y a du vent_ - noire.jpg"
+        "Tant qu’y a du vent": {
+          images: {
+            couleur: THEME_URI + "/photos_merch_ep/aquarelles__tant_qu_y_a_du_vent__couleur.jpg",
+            noire: THEME_URI + "/photos_merch_ep/aquarelles__tant_qu_y_a_du_vent__noire.jpg"
           }
         },
         "Tranquille": {
-          "images": {
-            "couleur": "PHOTOS MERCH EP/Aquarelles _Tranquille_ - couleur.jpg",
-            "noire": "PHOTOS MERCH EP/Aquarelles _Tranquille_ - noire.jpg"
+          images: {
+            couleur: THEME_URI + "/photos_merch_ep/aquarelles__tranquille__couleur.jpg",
+            noire: THEME_URI + "/photos_merch_ep/aquarelles__tranquille__noire.jpg"
           }
         }
       },
-      "selectionType": "radio",
-      "selectionLabel": "Choisir une chanson :",
-      "colorOption": "Phrase en couleur",
-      "colorOption2": "Phrase en noire",
-      "addToCartText": "Ajouter au panier"
+      inCarousel: true
     },
-    "bougies": {
-      "id": "bougies",
-      "title": "Bougies fleuries",
-      "description": "Faites main. Bougies réalisées dans des pots de récup. Cire de soja et fleurs séchées au dessus. Mèche en coton. Chaque bougie est unique et les photos en sont un exemple. Deux tailles : petite (pot de yaourt), grande (pot de confiture)",
-      "inCarousel": true,
-      "componentType": "productSection",
-      "variants": {
-        "petite": {
-          "name": "Petite bougie",
-          "price": 5,
-          "image": "PHOTOS MERCH EP/bougie petite.jpg"
+    bougies: {
+      id: "bougies",
+      title: "Bougies",
+      description: "Bougies parfumées inspirées de l'album.",
+      price: 8, // Default petite
+      addToCartText: "Ajouter au panier",
+      variants: {
+        petite: {
+          name: "Petite bougie",
+          price: 8,
+          image: THEME_URI + "/photos_merch_ep/bougie_petite.jpg"
         },
-        "grande": {
-          "name": "Grande bougie",
-          "price": 8,
-          "image": "PHOTOS MERCH EP/bougie grande.jpg"
+        grande: {
+          name: "Grande bougie",
+          price: 12,
+          image: THEME_URI + "/photos_merch_ep/bougie_grande.jpg"
         }
       },
-      "selectionType": "radio",
-      "addToCartText": "Ajouter au panier"
+      inCarousel: true
     }
   }
 };
+
+window.config = config;

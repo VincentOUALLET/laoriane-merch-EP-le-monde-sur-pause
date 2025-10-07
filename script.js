@@ -6,18 +6,22 @@ let cartCount = 0;
 document.addEventListener('DOMContentLoaded', function() {
   showLoadingSpinner();
 
-  // Load config.js dynamically
-  const script = document.createElement('script');
-  script.src = 'config.js';
-  script.onload = function() {
-    // config is now available from config.js
-    initializeApp();
-  };
-  script.onerror = function() {
-    console.error('Error loading config.js');
-    hideLoadingSpinner();
-  };
-  document.head.appendChild(script);
+  // Config is enqueued by WordPress, wait for window.config to be available
+  const checkConfig = setInterval(() => {
+    if (typeof window.config !== 'undefined') {
+      clearInterval(checkConfig);
+      initializeApp();
+    }
+  }, 50);
+
+  // Fallback timeout
+  setTimeout(() => {
+    clearInterval(checkConfig);
+    if (typeof window.config === 'undefined') {
+      console.error('Config not loaded');
+      hideLoadingSpinner();
+    }
+  }, 1000);
 });
 
 // Show loading spinner
@@ -41,34 +45,201 @@ function hideLoadingSpinner() {
   }
 }
 
+// Phase 1 : Override prices with WooCommerce data
+function overridePricesWithWooCommerce() {
+  // Prevent double execution
+  if (window.wooPricesUpdated) {
+    console.log('⏭️ WooCommerce prices already updated, skipping...');
+    return true;
+  }
+
+  // Check if WooCommerce products are available
+  if (typeof window.products === 'undefined') {
+    console.log('⏳ Waiting for WooCommerce products...');
+    return false; // Return false to indicate not ready
+  }
+
+  if (!Array.isArray(window.products) || window.products.length === 0) {
+    console.log('❌ WooCommerce products not available or empty, using config.js prices');
+    return false;
+  }
+
+  console.log('✅ Phase 1: WooCommerce products loaded, overriding prices...');
+  console.log(`📦 Found ${window.products.length} WooCommerce products`);
+
+  // Group WooCommerce products by category
+  const wooByCategory = {};
+  window.products.forEach(product => {
+    if (product.categories && Array.isArray(product.categories)) {
+      product.categories.forEach(category => {
+        if (!wooByCategory[category]) {
+          wooByCategory[category] = [];
+        }
+        wooByCategory[category].push(product);
+      });
+    }
+  });
+
+  console.log('📂 Products grouped by category:', wooByCategory);
+
+  // Map config.js keys to WooCommerce categories
+  const categoryMapping = {
+    'cd': 'CD',
+    'livret': 'Livret',
+    'aquarelles': 'Aquarelles',
+    'bougies': 'Bougies'
+  };
+
+  let updatesCount = 0;
+
+  // Override prices in config.products
+  Object.keys(config.products).forEach(configKey => {
+    const wooCategory = categoryMapping[configKey];
+    if (wooByCategory[wooCategory] && wooByCategory[wooCategory].length > 0) {
+      const wooProducts = wooByCategory[wooCategory];
+
+      if (configKey === 'bougies') {
+        // Special handling for bougies variants
+        const variantPrices = getBougiesVariantPrices(wooProducts);
+        if (variantPrices) {
+          const oldPrice = config.products[configKey].price;
+
+          // Update main price (petite by default)
+          config.products[configKey].price = variantPrices.petite;
+          console.log(`💰 Updated ${configKey}: ${oldPrice}€ → ${variantPrices.petite}€ (WooCommerce)`);
+          updatesCount++;
+
+          // Update variant prices
+          if (config.products[configKey].variants) {
+            if (config.products[configKey].variants.petite) {
+              const oldPetitePrice = config.products[configKey].variants.petite.price;
+              config.products[configKey].variants.petite.price = variantPrices.petite;
+              console.log(`🔧 Updated ${configKey} variant petite: ${oldPetitePrice}€ → ${variantPrices.petite}€`);
+            }
+
+            if (config.products[configKey].variants.grande) {
+              const oldGrandePrice = config.products[configKey].variants.grande.price;
+              config.products[configKey].variants.grande.price = variantPrices.grande;
+              console.log(`🔧 Updated ${configKey} variant grande: ${oldGrandePrice}€ → ${variantPrices.grande}€`);
+            }
+          }
+        }
+      } else {
+        // Standard handling for other products
+        const wooProduct = wooProducts[0]; // Take first product of category
+        const wooPrice = parseFloat(wooProduct.price);
+
+        if (!isNaN(wooPrice) && wooPrice > 0) {
+          const oldPrice = config.products[configKey].price;
+
+          // Override main price
+          config.products[configKey].price = wooPrice;
+          console.log(`💰 Updated ${configKey}: ${oldPrice}€ → ${wooPrice}€ (WooCommerce)`);
+          updatesCount++;
+
+          // Override variant prices if they exist
+          if (config.products[configKey].variants) {
+            Object.keys(config.products[configKey].variants).forEach(variantKey => {
+              const variant = config.products[configKey].variants[variantKey];
+              const oldVariantPrice = variant.price;
+              variant.price = wooPrice; // Use same price for all variants
+              console.log(`🔧 Updated ${configKey} variant ${variantKey}: ${oldVariantPrice}€ → ${wooPrice}€`);
+            });
+          }
+        }
+      }
+    } else {
+      console.log(`⚠️ No WooCommerce products found for category: ${wooCategory} (config key: ${configKey})`);
+    }
+  });
+
+  // Mark as updated to prevent double execution
+  window.wooPricesUpdated = true;
+
+  console.log(`✅ Phase 1 completed: ${updatesCount} price(s) updated from WooCommerce`);
+  return true; // Return true to indicate success
+}
+
+// Helper function to get bougies variant prices
+function getBougiesVariantPrices(wooProducts) {
+  const prices = { petite: null, grande: null };
+
+  wooProducts.forEach(product => {
+    const name = product.name.toLowerCase();
+    const price = parseFloat(product.price);
+
+    if (name.includes('petite') && !isNaN(price)) {
+      prices.petite = price;
+    } else if (name.includes('grande') && !isNaN(price)) {
+      prices.grande = price;
+    }
+  });
+
+  console.log('🎯 Bougies prices found:', prices);
+  return (prices.petite !== null && prices.grande !== null) ? prices : null;
+}
+
 function initializeApp() {
-  // Populate HTML texts from config
-  document.title = config.site.title;
-  document.querySelector('h1').textContent = config.site.headerTitle;
+  // Phase 1 : Override prices with WooCommerce data
+  // Wait for both config and products to be available
+  const checkDependencies = setInterval(() => {
+    if (typeof window.config !== 'undefined' && typeof window.products !== 'undefined') {
+      clearInterval(checkDependencies);
 
-  // Update navigation
-  const navLinks = document.querySelectorAll('.header-nav a');
-  navLinks[0].textContent = config.navigation.cd;
-  navLinks[1].textContent = config.navigation.carnet;
-  navLinks[2].textContent = config.navigation.aquarelles;
-  navLinks[3].textContent = config.navigation.bougies;
+      // Only run price override if not already done
+      if (!window.wooPricesUpdated) {
+        overridePricesWithWooCommerce();
+      }
 
-  // Update cart elements
-  document.querySelector('.cart-dropdown h3').textContent = config.cart.title;
-  document.querySelector('.total-amount').textContent = config.cart.empty + config.site.currency;
-  document.querySelector('.checkout-btn').textContent = config.cart.checkout;
+      // Continue with normal initialization
+      continueInitialization();
+    }
+  }, 50);
 
-  // Generate product sections dynamically
-  generateProductSections();
+  // Fallback timeout
+  setTimeout(() => {
+    clearInterval(checkDependencies);
+    if (typeof window.products === 'undefined') {
+      console.warn('WooCommerce products not loaded after timeout, using config.js prices');
+    }
 
-  // Initialize cart
-  updateCartDisplay();
+    // Only run if not already done
+    if (!window.wooPricesUpdated) {
+      overridePricesWithWooCommerce();
+    }
 
-  // Setup event listeners
-  setupEventListeners();
+    continueInitialization();
+  }, 2000);
+}
 
-  // Hide loading spinner and show content
-  hideLoadingSpinner();
+function continueInitialization() {
+   // Populate HTML texts from config
+   document.title = config.site.title;
+   document.querySelector('h1').textContent = config.site.headerTitle;
+
+   // Update navigation
+   const navLinks = document.querySelectorAll('.header-nav a');
+   navLinks[0].textContent = config.navigation.cd;
+   navLinks[1].textContent = config.navigation.carnet;
+   navLinks[2].textContent = config.navigation.aquarelles;
+   navLinks[3].textContent = config.navigation.bougies;
+
+   // Update cart elements
+   document.querySelector('.cart-dropdown h3').textContent = config.cart.title;
+   document.querySelector('.total-amount').textContent = config.cart.empty + config.site.currency;
+   document.querySelector('.checkout-btn').textContent = config.cart.checkout;
+
+   // Generate product sections dynamically
+   generateProductSections();
+
+   // Initialize cart
+   updateCartDisplay();
+
+   // Setup event listeners
+   setupEventListeners();
+
+   // Hide loading spinner and show content
+   hideLoadingSpinner();
 }
 
 // Generate all product sections from config
