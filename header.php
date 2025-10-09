@@ -22,7 +22,7 @@
         </nav>
         <div class="cart-container">
             <div class="cart-icon">
-                <img src="<?php echo get_template_directory_uri(); ?>/photos_merch_ep/cart_btn.png" alt="">
+                <img src="http://192.168.1.175/wp-content/uploads/2025/09/cart_btn.png" alt="">
                 <span class="cart-count">0</span>
             </div>
             <div class="cart-dropdown">
