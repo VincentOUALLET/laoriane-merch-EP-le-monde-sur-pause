@@ -179,16 +179,227 @@ function getBougiesVariantPrices(wooProducts) {
   return (prices.petite !== null && prices.grande !== null) ? prices : null;
 }
 
+// Phase 2: Transform WooCommerce products to match config.js structure
+function transformWooCommerceProducts() {
+  if (!window.products || !Array.isArray(window.products)) {
+    console.warn('⚠️ No WooCommerce products available for transformation');
+    return null;
+  }
+
+  console.log('✅ Phase 2: Transforming WooCommerce products...');
+
+  const transformed = {
+    cd: null,
+    livret: null,
+    aquarelles: null,
+    bougies: null
+  };
+
+  // Group products by category
+  const byCategory = {
+    'CD': [],
+    'Livret': [],
+    'Aquarelles': [],
+    'Bougies': []
+  };
+
+  window.products.forEach(product => {
+    if (product.categories && Array.isArray(product.categories)) {
+      product.categories.forEach(cat => {
+        if (byCategory[cat]) {
+          byCategory[cat].push(product);
+        }
+      });
+    }
+  });
+
+  // Transform CD
+  if (byCategory['CD'].length > 0) {
+    const cdProduct = byCategory['CD'][0];
+    transformed.cd = {
+      id: 'cd',
+      title: cdProduct.name,
+      description: cdProduct.description || config.products.cd.description,
+      price: parseFloat(cdProduct.price),
+      addToCartText: config.products.cd.addToCartText,
+      images: [],
+      inCarousel: true
+    };
+
+    // Add main image
+    if (cdProduct.image) {
+      transformed.cd.images.push({
+        src: cdProduct.image,
+        alt: cdProduct.name + ' recto'
+      });
+    }
+
+    // Add gallery images
+    if (cdProduct.gallery && Array.isArray(cdProduct.gallery)) {
+      cdProduct.gallery.forEach((imgUrl, index) => {
+        transformed.cd.images.push({
+          src: imgUrl,
+          alt: cdProduct.name + ' ' + (index + 2)
+        });
+      });
+    }
+  }
+
+  // Transform Livret
+  if (byCategory['Livret'].length > 0) {
+    // Find main product (without variant suffix)
+    const mainLivret = byCategory['Livret'].find(p => p.sku === 'livret') || byCategory['Livret'][0];
+    
+    transformed.livret = {
+      id: 'livret',
+      title: 'Livret de paroles et poèmes',
+      description: mainLivret.description || config.products.livret.description,
+      description2: config.products.livret.description2,
+      price: parseFloat(mainLivret.price),
+      selectionType: 'dropdown',
+      selectionLabel: config.products.livret.selectionLabel,
+      addToCartText: config.products.livret.addToCartText,
+      colorOptions: config.products.livret.colorOptions,
+      variants: {},
+      inCarousel: true
+    };
+
+    // Map variants
+    const variantMapping = {
+      'livret-vert-bleu': 'vert-bleu',
+      'livret-bordeaux': 'bordeaux',
+      'livret-violet-fleuris': 'violet-fleuri'
+    };
+
+    byCategory['Livret'].forEach(product => {
+      const variantKey = variantMapping[product.sku];
+      if (variantKey) {
+        // Extract variant name from product name (after " - ")
+        const nameParts = product.name.split(' - ');
+        const variantName = nameParts.length > 1 ? nameParts[1] : product.name;
+
+        transformed.livret.variants[variantKey] = {
+          name: variantName,
+          price: parseFloat(product.price),
+          image: product.image || THEME_URI + '/photos_merch_ep/livret_' + variantKey.replace('-', '_') + '.jpg'
+        };
+      }
+    });
+
+    // Fallback: if no variants found, use config.js variants
+    if (Object.keys(transformed.livret.variants).length === 0) {
+      transformed.livret.variants = config.products.livret.variants;
+    }
+  }
+
+  // Transform Bougies
+  if (byCategory['Bougies'].length > 0) {
+    transformed.bougies = {
+      id: 'bougies',
+      title: 'Bougies',
+      description: 'Bougies parfumées inspirées de l\'album.',
+      price: 5, // Default to petite
+      addToCartText: config.products.bougies.addToCartText,
+      variants: {},
+      inCarousel: true
+    };
+
+    byCategory['Bougies'].forEach(product => {
+      const name = product.name.toLowerCase();
+      if (name.includes('petite')) {
+        transformed.bougies.variants.petite = {
+          name: 'Petite bougie',
+          price: parseFloat(product.price),
+          image: product.image || THEME_URI + '/photos_merch_ep/bougie_petite.jpg'
+        };
+        transformed.bougies.price = parseFloat(product.price);
+      } else if (name.includes('grande')) {
+        transformed.bougies.variants.grande = {
+          name: 'Grande bougie',
+          price: parseFloat(product.price),
+          image: product.image || THEME_URI + '/photos_merch_ep/bougie_grande.jpg'
+        };
+      }
+    });
+
+    // Fallback: if no variants found, use config.js variants
+    if (Object.keys(transformed.bougies.variants).length === 0) {
+      transformed.bougies.variants = config.products.bougies.variants;
+    }
+  }
+
+  // Transform Aquarelles
+  if (byCategory['Aquarelles'].length > 0) {
+    transformed.aquarelles = {
+      id: 'aquarelles',
+      title: 'Aquarelles',
+      description: 'Aquarelles inspirées des chansons de l\'album.',
+      selectionLabel: config.products.aquarelles.selectionLabel,
+      addToCartText: config.products.aquarelles.addToCartText,
+      price: 3,
+      colorOption: config.products.aquarelles.colorOption,
+      colorOption2: config.products.aquarelles.colorOption2,
+      songs: {},
+      inCarousel: true
+    };
+
+    // Group aquarelles by song
+    const songGroups = {};
+
+    byCategory['Aquarelles'].forEach(product => {
+      // Extract song name and color from product name
+      // Format: "Aquarelle - [Song Name] (couleur/noire)"
+      const match = product.name.match(/Aquarelle - (.+?) \((couleur|noire)\)/);
+      if (match) {
+        const songName = match[1];
+        const color = match[2];
+
+        if (!songGroups[songName]) {
+          songGroups[songName] = { images: {} };
+        }
+
+        songGroups[songName].images[color] = product.image || '';
+        
+        // Update price from first product
+        if (transformed.aquarelles.price === 3) {
+          transformed.aquarelles.price = parseFloat(product.price);
+        }
+      }
+    });
+
+    transformed.aquarelles.songs = songGroups;
+
+    // Fallback: if no songs found, use config.js songs
+    if (Object.keys(transformed.aquarelles.songs).length === 0) {
+      transformed.aquarelles.songs = config.products.aquarelles.songs;
+    }
+  }
+
+  console.log('✅ Phase 2 completed: Products transformed', transformed);
+  return transformed;
+}
+
 function initializeApp() {
-  // Phase 1 : Override prices with WooCommerce data
   // Wait for both config and products to be available
   const checkDependencies = setInterval(() => {
     if (typeof window.config !== 'undefined' && typeof window.products !== 'undefined') {
       clearInterval(checkDependencies);
 
-      // Only run price override if not already done
+      // Phase 1: Override prices (legacy support)
       if (!window.wooPricesUpdated) {
         overridePricesWithWooCommerce();
+      }
+
+      // Phase 2: Transform WooCommerce products and merge with config
+      const transformedProducts = transformWooCommerceProducts();
+      if (transformedProducts) {
+        // Merge transformed products into config.products
+        Object.keys(transformedProducts).forEach(key => {
+          if (transformedProducts[key]) {
+            config.products[key] = transformedProducts[key];
+          }
+        });
+        console.log('✅ Products merged into config:', config.products);
       }
 
       // Continue with normal initialization
@@ -200,12 +411,21 @@ function initializeApp() {
   setTimeout(() => {
     clearInterval(checkDependencies);
     if (typeof window.products === 'undefined') {
-      console.warn('WooCommerce products not loaded after timeout, using config.js prices');
-    }
-
-    // Only run if not already done
-    if (!window.wooPricesUpdated) {
-      overridePricesWithWooCommerce();
+      console.warn('⚠️ WooCommerce products not loaded after timeout, using config.js data');
+    } else {
+      // Try transformation even after timeout
+      if (!window.wooPricesUpdated) {
+        overridePricesWithWooCommerce();
+      }
+      
+      const transformedProducts = transformWooCommerceProducts();
+      if (transformedProducts) {
+        Object.keys(transformedProducts).forEach(key => {
+          if (transformedProducts[key]) {
+            config.products[key] = transformedProducts[key];
+          }
+        });
+      }
     }
 
     continueInitialization();
