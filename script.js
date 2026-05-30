@@ -1032,15 +1032,21 @@ function showCheckoutModal() {
       }
 
       // Generate email text
-      let orderText = 'Nouvelle commande\n\nClient :\n';
-      orderText += `${customer.firstName} ${customer.lastName}\n`;
+      let orderText = 'Nouvelle commande\n\n';
+      orderText += 'Nom :\n';
+      orderText += `${customer.lastName}\n`;
+      orderText += 'Prénom :\n';
+      orderText += `${customer.firstName}\n`;
+      orderText += 'Email :\n';
       orderText += `${customer.email}\n\n`;
+      
       orderText += 'Adresse :\n';
       orderText += `${customer.address}\n`;
       orderText += `${customer.country}\n`;
-      if (customer.phone) {
-        orderText += `${customer.phone}\n`;
-      }
+      orderText += 'Téléphone :\n';
+      orderText += `${(customer.phone)?customer.phone:"NON REMPLI"}\n\n`;
+      orderText += 'Message :\n';
+      orderText += `${(customer.message)?customer.message:"NON REMPLI"}\n`;
       orderText += '\nCommande :\n';
       let total = 0;
       cartItems.forEach(item => {
