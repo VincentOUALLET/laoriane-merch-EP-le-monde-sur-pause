@@ -183,5 +183,10 @@ const config = {
       "selectionType": "radio",
       "addToCartText": "Ajouter au panier"
     }
+  },
+  "emailjs": {
+    "publicKey": "KbaSCB2NyC-NoQfNo",
+    "serviceId": "service_ko6x8au",
+    "templateId": "template_b0cocii"
   }
 };

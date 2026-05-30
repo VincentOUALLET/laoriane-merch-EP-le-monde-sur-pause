@@ -1,6 +1,7 @@
 // Shopping cart state
 let cart = [];
 let cartCount = 0;
+let checkoutModal = null;
 
 // Show loading spinner initially
 document.addEventListener('DOMContentLoaded', function() {
@@ -42,33 +43,40 @@ function hideLoadingSpinner() {
 }
 
 function initializeApp() {
-  // Populate HTML texts from config
-  document.title = config.site.title;
-  document.querySelector('h1').textContent = config.site.headerTitle;
+   // Populate HTML texts from config
+   document.title = config.site.title;
+   document.querySelector('h1').textContent = config.site.headerTitle;
 
-  // Update navigation
-  const navLinks = document.querySelectorAll('.header-nav a');
-  navLinks[0].textContent = config.navigation.cd;
-  navLinks[1].textContent = config.navigation.carnet;
-  navLinks[2].textContent = config.navigation.aquarelles;
-  navLinks[3].textContent = config.navigation.bougies;
+   // Update navigation
+   const navLinks = document.querySelectorAll('.header-nav a');
+   navLinks[0].textContent = config.navigation.cd;
+   navLinks[1].textContent = config.navigation.carnet;
+   navLinks[2].textContent = config.navigation.aquarelles;
+   navLinks[3].textContent = config.navigation.bougies;
 
-  // Update cart elements
-  document.querySelector('.cart-dropdown h3').textContent = config.cart.title;
-  document.querySelector('.total-amount').textContent = config.cart.empty + config.site.currency;
-  document.querySelector('.checkout-btn').textContent = config.cart.checkout;
+   // Update cart elements
+   document.querySelector('.cart-dropdown h3').textContent = config.cart.title;
+   document.querySelector('.total-amount').textContent = config.cart.empty + config.site.currency;
+   document.querySelector('.checkout-btn').textContent = config.cart.checkout;
 
-  // Generate product sections dynamically
-  generateProductSections();
+   // Generate product sections dynamically
+   generateProductSections();
 
-  // Initialize cart
-  updateCartDisplay();
+   // Load cart from localStorage
+   loadCartFromStorage();
+   // Initialize cart
+   updateCartDisplay();
 
-  // Setup event listeners
-  setupEventListeners();
+// Initialize EmailJS if available
+    if (typeof emailjs !== 'undefined' && config.emailjs.publicKey) {
+      window.emailjs.init(config.emailjs.publicKey);
+    }
 
-  // Hide loading spinner and show content
-  hideLoadingSpinner();
+   // Setup event listeners
+   setupEventListeners();
+
+   // Hide loading spinner and show content
+   hideLoadingSpinner();
 }
 
 // Generate all product sections from config
@@ -367,9 +375,10 @@ function setupEventListeners() {
   // Image clicks for lightbox
   setupImageListeners();
 
-  // Other features
-  setupHoverEffects();
-  setupSmoothScrolling();
+   // Other features
+   setupHoverEffects();
+   setupSmoothScrolling();
+   setupCheckoutListener();
 }
 
 // Handle cart quantity and deletion
@@ -378,9 +387,10 @@ function handleCartControls(e) {
   if (e.target.classList.contains('plus')) {
     const index = parseInt(e.target.dataset.index);
     if (index >= 0 && index < cart.length) {
-      cart[index].quantity++;
-      cartCount++;
-      updateCartDisplay();
+       cart[index].quantity++;
+       cartCount++;
+       saveCartToStorage();
+       updateCartDisplay();
     }
   }
 
@@ -388,12 +398,13 @@ function handleCartControls(e) {
   if (e.target.classList.contains('minus')) {
     const index = parseInt(e.target.dataset.index);
     if (index >= 0 && index < cart.length) {
-      cart[index].quantity--;
-      cartCount--;
-      if (cart[index].quantity <= 0) {
-        cart.splice(index, 1);
-      }
-      updateCartDisplay();
+       cart[index].quantity--;
+       cartCount--;
+       if (cart[index].quantity <= 0) {
+         cart.splice(index, 1);
+       }
+       saveCartToStorage();
+       updateCartDisplay();
     }
   }
 
@@ -401,9 +412,10 @@ function handleCartControls(e) {
   if (e.target.classList.contains('delete-btn')) {
     const index = parseInt(e.target.dataset.index);
     if (index >= 0 && index < cart.length) {
-      cartCount -= cart[index].quantity;
-      cart.splice(index, 1);
-      updateCartDisplay();
+       cartCount -= cart[index].quantity;
+       cart.splice(index, 1);
+       saveCartToStorage();
+       updateCartDisplay();
     }
   }
 }
@@ -607,6 +619,7 @@ function addToCart(name, quantity, price) {
   }
 
   cartCount += quantity;
+  saveCartToStorage();
   updateCartDisplay();
 }
 
@@ -662,6 +675,30 @@ function updateCartDisplay() {
   }
 
   updateQuantityBadges();
+}
+
+// Save cart to localStorage
+function saveCartToStorage() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+// Load cart from localStorage
+function loadCartFromStorage() {
+  const stored = localStorage.getItem('cart');
+  if (stored) {
+    try {
+      cart = JSON.parse(stored);
+      // Update cartCount based on loaded cart
+      cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    } catch (e) {
+      console.error('Failed to parse cart from localStorage', e);
+      cart = [];
+      cartCount = 0;
+    }
+  } else {
+    cart = [];
+    cartCount = 0;
+  }
 }
 
 function updateQuantityBadges() {
@@ -824,9 +861,252 @@ function openLightbox(index, src, alt) {
     updateLightboxImage();
   }
 
-  function updateLightboxImage() {
-    const currentImg = allImages[currentImageIndex];
-    lightboxImg.src = currentImg.src;
-    lightboxImg.alt = currentImg.alt;
+   function updateLightboxImage() {
+     const currentImg = allImages[currentImageIndex];
+     lightboxImg.src = currentImg.src;
+     lightboxImg.alt = currentImg.alt;
+   }
+}
+
+// Setup checkout button listener
+function setupCheckoutListener() {
+  const checkoutBtn = document.querySelector('.checkout-btn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showCheckoutModal();
+    });
+  }
+}
+
+// Create checkout modal
+function createCheckoutModal() {
+  const modal = document.createElement('div');
+  modal.className = 'checkout-modal';
+  modal.innerHTML = `
+    <style>
+      .checkout-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+      }
+      .checkout-modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        position: relative;
+      }
+      .checkout-modal-close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .checkout-modal-close:hover,
+      .checkout-modal-close:focus {
+        color: black;
+        text-decoration: none;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .checkout-submit-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        cursor: pointer;
+      }
+      .checkout-submit-btn:hover {
+        background-color: #45a049;
+      }
+      .checkout-message {
+        margin-top: 15px;
+        font-weight: bold;
+      }
+    </style>
+    <div class="checkout-modal-content">
+      <span class="checkout-modal-close">&times;</span>
+      <h2>Passer commande</h2>
+      <form id="checkout-form">
+        <div class="form-group">
+          <label for="first-name">Prénom *</label>
+          <input type="text" id="first-name" required>
+        </div>
+        <div class="form-group">
+          <label for="last-name">Nom *</label>
+          <input type="text" id="last-name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label for="address">Adresse *</label>
+          <textarea id="address" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="country">Pays *</label>
+          <input type="text" id="country" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">Téléphone (optionnel)</label>
+          <input type="tel" id="phone">
+        </div>
+        <div class="form-group">
+          <label for="message">Message (optionnel)</label>
+          <textarea id="message" rows="2"></textarea>
+        </div>
+        <button type="submit" class="checkout-submit-btn">Envoyer la commande</button>
+        <div class="checkout-message"></div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+// Show checkout modal
+function showCheckoutModal() {
+  if (!checkoutModal) {
+    checkoutModal = createCheckoutModal();
+    // Add event listeners for close and form submit
+    const closeBtn = checkoutModal.querySelector('.checkout-modal-close');
+    const form = checkoutModal.querySelector('#checkout-form');
+    const messageDiv = checkoutModal.querySelector('.checkout-message');
+
+    closeBtn.addEventListener('click', hideCheckoutModal);
+    // Close when clicking outside the modal content
+    checkoutModal.addEventListener('click', (e) => {
+      if (e.target === checkoutModal) {
+        hideCheckoutModal();
+      }
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Gather form data
+      const customer = {
+        firstName: document.getElementById('first-name').value.trim(),
+        lastName: document.getElementById('last-name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        country: document.getElementById('country').value.trim(),
+        phone: document.getElementById('phone').value.trim() || "NON REMPLI PAR L'ACHETEUR",
+        message: document.getElementById('message').value.trim() || "NON REMPLI PAR L'ACHETEUR"
+      };
+
+      // Validate required fields
+      if (!customer.firstName || !customer.lastName || !customer.email || !customer.address || !customer.country) {
+        messageDiv.textContent = 'Veuillez remplir tous les champs obligatoires.';
+        messageDiv.style.color = 'red';
+        return;
+      }
+
+      // Get cart from localStorage
+      const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+      if (cartItems.length === 0) {
+        messageDiv.textContent = 'Votre panier est vide.';
+        messageDiv.style.color = 'red';
+        return;
+      }
+
+      // Generate email text
+      let orderText = 'Nouvelle commande\n\nClient :\n';
+      orderText += `${customer.firstName} ${customer.lastName}\n`;
+      orderText += `${customer.email}\n\n`;
+      orderText += 'Adresse :\n';
+      orderText += `${customer.address}\n`;
+      orderText += `${customer.country}\n`;
+      if (customer.phone) {
+        orderText += `${customer.phone}\n`;
+      }
+      orderText += '\nCommande :\n';
+      let total = 0;
+      cartItems.forEach(item => {
+        orderText += `- ${item.name} x${item.quantity} = ${(item.price * item.quantity).toFixed(2)}€\n`;
+        total += item.price * item.quantity;
+      });
+       orderText += `\nTotal : ${total.toFixed(2)}€`;
+
+      // Send email via EmailJS
+      if (typeof emailjs === 'undefined') {
+        console.error('EmailJS library not loaded');
+        messageDiv.textContent = 'Erreur : le service de messagerie n\'est pas disponible. Veuillez réessayer plus tard.';
+        messageDiv.style.color = 'red';
+        return;
+      }
+      if (!config.emailjs.publicKey || !config.emailjs.serviceId || !config.emailjs.templateId) {
+        console.error('EmailJS not configured', config.emailjs);
+        messageDiv.textContent = 'Erreur : configuration du service de messagerie incomplète.';
+        messageDiv.style.color = 'red';
+        return;
+      }
+       emailjs.send(
+         config.emailjs.serviceId,
+         config.emailjs.templateId,
+         {
+           customer_first_name: customer.firstName,
+           customer_last_name: customer.lastName,
+           customer_email: customer.email,
+           customer_address: customer.address,
+           customer_country: customer.country,
+           customer_phone: customer.phone,
+           customer_message: customer.message,
+           order_text: orderText
+         },
+         config.emailjs.publicKey
+       )
+      .then(() => {
+        // Success
+        messageDiv.textContent = 'Commande envoyée avec succès. Nous vous contacterons rapidement.';
+        messageDiv.style.color = 'green';
+        // Clear cart
+        cart = [];
+        cartCount = 0;
+        localStorage.removeItem('cart');
+        updateCartDisplay();
+        // Reset form
+        form.reset();
+        // Hide modal after a short delay
+        setTimeout(() => {
+          hideCheckoutModal();
+        }, 2000);
+      })
+      .catch((error) => {
+        console.error('EmailJS error:', error);
+        messageDiv.textContent = 'Erreur lors de l’envoi. Veuillez réessayer.';
+        messageDiv.style.color = 'red';
+      });
+    });
+  }
+  // Show the modal
+  checkoutModal.style.display = 'block';
+}
+
+// Hide checkout modal
+function hideCheckoutModal() {
+  if (checkoutModal) {
+    checkoutModal.style.display = 'none';
   }
 }
