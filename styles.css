@@ -11,6 +11,7 @@
 	--red: #e73c7c;
 	--warning: #d7175f;
 	--image-transform: 1.02;
+	--transition: 0.3s ease;
 }
 
 * {
@@ -76,7 +77,7 @@ header h1 {
 	text-decoration: none;
 	padding: 0.5rem 1rem;
 	border-radius: 4px;
-	transition: background-color 0.3s ease;
+	transition: background-color var(--transition);
 	font-weight: 500;
 }
 
@@ -215,7 +216,7 @@ header h1 {
 	align-items: center;
 	justify-content: center;
 	font-weight: bold;
-	transition: background-color 0.3s ease;
+	transition: background-color var(--transition);
 }
 
 .qty-btn:hover,
@@ -255,7 +256,7 @@ header h1 {
 	width: 100%;
 	font-size: 1rem;
 	font-weight: bold;
-	transition: background-color 0.3s ease;
+	transition: background-color var(--transition);
 }
 
 .checkout-btn:hover {
@@ -282,7 +283,7 @@ main {
 	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	margin-bottom: 2rem;
 	padding: 2rem;
-	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	transition: transform var(--transition), box-shadow var(--transition);
 }
 
 .product h2 {
@@ -471,7 +472,7 @@ footer {
 	font-size: 1.1rem;
 	border-radius: 4px;
 	cursor: pointer;
-	transition: background-color 0.3s ease, transform 0.2s ease;
+	transition: background-color var(--transition), transform var(--transition);
 	margin-top: 1rem;
 	font-weight: bold;
 }
@@ -500,7 +501,7 @@ footer {
 	z-index: 1000;
 	align-items: center;
 	justify-content: center;
-	transition: background-color 0.3s ease, transform 0.3s ease;
+	transition: background-color var(--transition), transform var(--transition);
 }
 
 .close:hover {
@@ -564,7 +565,7 @@ select:focus {
 	font-size: 1.1rem;
 	border-radius: 4px;
 	cursor: pointer;
-	transition: background-color 0.3s ease;
+	transition: background-color var(--transition);
 	font-weight: bold;
 }
 
@@ -577,7 +578,7 @@ select:focus {
 	height: 50px;
 	border-radius: 50%;
 	cursor: pointer;
-	transition: background-color 0.3s ease;
+	transition: background-color var(--transition);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -633,6 +634,7 @@ select:focus {
 img:hover {
 	transform: scale(var(--image-transform));
 	cursor: pointer;
+	transition: transform var(--transition);
 }
 
 /* Responsive design */
