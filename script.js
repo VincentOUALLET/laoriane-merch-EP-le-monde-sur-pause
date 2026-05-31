@@ -103,47 +103,53 @@ function generateProductSection(product) {
   title.textContent = product.title;
   section.appendChild(title);
 
-  // Images
-  if (product.images) {
-    const imagesDiv = document.createElement('div');
-    imagesDiv.className = 'product-images';
-    product.images.forEach(imgData => {
-      const img = document.createElement('img');
-      img.src = imgData.src;
-      img.alt = imgData.alt;
-      img.className = 'product-image';
-      img.dataset.productId = product.id;
-      img.dataset.productType = 'single';
-      if (product.id !== 'cd') {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'image-wrapper';
-        wrapper.appendChild(img);
-        imagesDiv.appendChild(wrapper);
-      } else {
-        imagesDiv.appendChild(img);
-      }
-    });
-    section.appendChild(imagesDiv);
-  } else if (product.variants) {
-    // Handle products with variants (livret, bougies)
-    const imagesDiv = document.createElement('div');
-    imagesDiv.className = 'product-images';
-    Object.entries(product.variants).forEach(([variantKey, variant]) => {
-      if (variant.image) {
-        const img = document.createElement('img');
-        img.src = variant.image;
-        img.alt = variant.name;
-        img.className = 'product-image';
-        img.dataset.productId = product.id;
-        img.dataset.productType = 'variant';
-        img.dataset.variantKey = variantKey;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'image-wrapper';
-        wrapper.appendChild(img);
-        imagesDiv.appendChild(wrapper);
-      }
-    });
-    section.appendChild(imagesDiv);
+   // Images
+   if (product.images) {
+     const imagesDiv = document.createElement('div');
+     imagesDiv.className = 'product-images';
+     product.images.forEach(imgData => {
+       const img = document.createElement('img');
+       img.src = imgData.src;
+       img.alt = imgData.alt;
+       img.className = 'product-image';
+       if (product.inCarousel) {
+         img.classList.add('carousel-image');
+       }
+       img.dataset.productId = product.id;
+       img.dataset.productType = 'single';
+       if (product.id !== 'cd') {
+         const wrapper = document.createElement('div');
+         wrapper.className = 'image-wrapper';
+         wrapper.appendChild(img);
+         imagesDiv.appendChild(wrapper);
+       } else {
+         imagesDiv.appendChild(img);
+       }
+     });
+     section.appendChild(imagesDiv);
+   } else if (product.variants) {
+     // Handle products with variants (livret, bougies)
+     const imagesDiv = document.createElement('div');
+     imagesDiv.className = 'product-images';
+     Object.entries(product.variants).forEach(([variantKey, variant]) => {
+       if (variant.image) {
+         const img = document.createElement('img');
+         img.src = variant.image;
+         img.alt = variant.name;
+         img.className = 'product-image';
+         if (product.inCarousel) {
+           img.classList.add('carousel-image');
+         }
+         img.dataset.productId = product.id;
+         img.dataset.productType = 'variant';
+         img.dataset.variantKey = variantKey;
+         const wrapper = document.createElement('div');
+         wrapper.className = 'image-wrapper';
+         wrapper.appendChild(img);
+         imagesDiv.appendChild(wrapper);
+       }
+     });
+     section.appendChild(imagesDiv);
   }
 
   // Details
@@ -262,21 +268,24 @@ function generateAquarellesSongs(product) {
     const imagesDiv = document.createElement('div');
     imagesDiv.className = 'song-images';
 
-    Object.entries(songData.images).forEach(([color, imgSrc]) => {
-      const img = document.createElement('img');
-      img.src = imgSrc;
-      img.alt = `${songName} - ${color}`;
-      img.className = 'song-image';
-      img.dataset.song = songName;
-      img.dataset.color = color;
-      img.dataset.productId = product.id;
-      img.dataset.productType = 'aquarelle';
-      img.dataset.variantKey = `${songName}-${color}`;
-      const wrapper = document.createElement('div');
-      wrapper.className = 'image-wrapper';
-      wrapper.appendChild(img);
-      imagesDiv.appendChild(wrapper);
-    });
+     Object.entries(songData.images).forEach(([color, imgSrc]) => {
+       const img = document.createElement('img');
+       img.src = imgSrc;
+       img.alt = `${songName} - ${color}`;
+       img.className = 'song-image';
+       if (product.inCarousel) {
+         img.classList.add('carousel-image');
+       }
+       img.dataset.song = songName;
+       img.dataset.color = color;
+       img.dataset.productId = product.id;
+       img.dataset.productType = 'aquarelle';
+       img.dataset.variantKey = `${songName}-${color}`;
+       const wrapper = document.createElement('div');
+       wrapper.className = 'image-wrapper';
+       wrapper.appendChild(img);
+       imagesDiv.appendChild(wrapper);
+     });
 
     songOption.appendChild(imagesDiv);
 
@@ -702,171 +711,202 @@ function loadCartFromStorage() {
 }
 
 function updateQuantityBadges() {
-  const productImages = document.querySelectorAll('.product-image, .song-image');
+    const productImages = document.querySelectorAll('.product-image, .song-image');
 
-  productImages.forEach(img => {
-    const badge = img.parentElement.querySelector('.quantity-badge');
-    if (badge) {
-      const src = img.src;
-      let quantity = 0;
+    productImages.forEach(img => {
+      const badge = img.parentElement.querySelector('.quantity-badge');
+      if (badge) {
+        const src = img.src;
+        let quantity = 0;
 
-      if (src.includes('Aquarelles')) {
-        // Aquarelles: per song and color
-        const song = img.dataset.song;
-        const color = img.dataset.color;
-        if (song && color) {
-          const cartItem = cart.find(item => item.name === `Aquarelle - ${song} (${color})`);
+        if (src.includes('Aquarelles')) {
+          // Aquarelles: per song and color
+          const song = img.dataset.song;
+          const color = img.dataset.color;
+          if (song && color) {
+            const cartItem = cart.find(item => item.name === `Aquarelle - ${song} (${color})`);
+            quantity = cartItem ? cartItem.quantity : 0;
+          }
+        } else if (src.includes('bougie')) {
+          // Bougies: differentiate petite and grande
+          const isPetite = src.includes('petite');
+          const size = isPetite ? 'petite' : 'grande';
+          const variant = config.products.bougies.variants[size];
+          const cartItem = cart.find(item => item.name === `${config.products.bougies.title} (${variant.name.toLowerCase()})`);
+          quantity = cartItem ? cartItem.quantity : 0;
+        } else if (src.toLowerCase().includes('livret')) {
+          // Livret: use variantKey to find specific variant
+          const variantKey = img.dataset.variantKey;
+          if (variantKey && config.products.livret.variants[variantKey]) {
+            const variant = config.products.livret.variants[variantKey];
+            const cartItem = cart.find(item => item.name === `${config.products.livret.title} (${variant.name.toLowerCase()})`);
+            quantity = cartItem ? cartItem.quantity : 0;
+          }
+        } else if (src.includes('CD')) {
+          // CD: single product
+          const cartItem = cart.find(item => item.name === config.products.cd.title);
           quantity = cartItem ? cartItem.quantity : 0;
         }
-      } else if (src.includes('bougie')) {
-        // Bougies: differentiate petite and grande
-        const isPetite = src.includes('petite');
-        const size = isPetite ? 'petite' : 'grande';
-        const variant = config.products.bougies.variants[size];
-        const cartItem = cart.find(item => item.name === `${config.products.bougies.title} (${variant.name.toLowerCase()})`);
-        quantity = cartItem ? cartItem.quantity : 0;
-      } else if (src.toLowerCase().includes('livret')) {
-        // Livret: use variantKey to find specific variant
-        const variantKey = img.dataset.variantKey;
-        if (variantKey && config.products.livret.variants[variantKey]) {
-          const variant = config.products.livret.variants[variantKey];
-          const cartItem = cart.find(item => item.name === `${config.products.livret.title} (${variant.name.toLowerCase()})`);
-          quantity = cartItem ? cartItem.quantity : 0;
-        }
-      } else if (src.includes('CD')) {
-        // CD: single product
-        const cartItem = cart.find(item => item.name === config.products.cd.title);
+
+        badge.textContent = quantity;
+        badge.style.display = quantity > 0 ? 'flex' : 'none';
+      }
+    });
+}
+
+// Helper to get quantity for an image element
+function getQuantityForImage(img) {
+    const src = img.src;
+    let quantity = 0;
+
+    if (src.includes('Aquarelles')) {
+      // Aquarelles: per song and color
+      const song = img.dataset.song;
+      const color = img.dataset.color;
+      if (song && color) {
+        const cartItem = cart.find(item => item.name === `Aquarelle - ${song} (${color})`);
         quantity = cartItem ? cartItem.quantity : 0;
       }
-
-      badge.textContent = quantity;
-      badge.style.display = quantity > 0 ? 'flex' : 'none';
+    } else if (src.includes('bougie')) {
+      // Bougies: differentiate petite and grande
+      const isPetite = src.includes('petite');
+      const size = isPetite ? 'petite' : 'grande';
+      const variant = config.products.bougies.variants[size];
+      const cartItem = cart.find(item => item.name === `${config.products.bougies.title} (${variant.name.toLowerCase()})`);
+      quantity = cartItem ? cartItem.quantity : 0;
+    } else if (src.toLowerCase().includes('livret')) {
+      // Livret: use variantKey to find specific variant
+      const variantKey = img.dataset.variantKey;
+      if (variantKey && config.products.livret.variants[variantKey]) {
+        const variant = config.products.livret.variants[variantKey];
+        const cartItem = cart.find(item => item.name === `${config.products.livret.title} (${variant.name.toLowerCase()})`);
+        quantity = cartItem ? cartItem.quantity : 0;
+      }
+    } else if (src.includes('CD')) {
+      // CD: single product
+      const cartItem = cart.find(item => item.name === config.products.cd.title);
+      quantity = cartItem ? cartItem.quantity : 0;
     }
-  });
+
+    return quantity;
 }
 
 // Lightbox functionality
 let currentImageIndex = 0;
 
 function openLightbox(index, src, alt) {
-  currentImageIndex = index;
-  const allImages = getCarouselImages();
+    currentImageIndex = index;
+    const allImages = getCarouselImages();
 
-  const lightbox = document.createElement('div');
-  lightbox.id = 'lightbox';
-  lightbox.className = 'lightbox';
+    // Create lightbox container
+    const lightbox = document.createElement('div');
+    lightbox.id = 'lightbox';
+    lightbox.className = 'lightbox';
 
-  const lightboxImg = document.createElement('img');
-  lightboxImg.src = src;
-  lightboxImg.alt = alt;
-  lightboxImg.className = 'lightbox-img';
+    // Lightbox image
+    const lightboxImg = document.createElement('img');
+    lightboxImg.src = src;
+    lightboxImg.alt = alt;
+    lightboxImg.className = 'lightbox-img'; // No carousel-image class
 
-  const lightboxControls = document.createElement('div');
-  lightboxControls.className = 'lightbox-controls';
+    // Controls container
+    const lightboxControls = document.createElement('div');
+    lightboxControls.className = 'lightbox-controls';
 
-  const closeBtn = document.createElement('span');
-  closeBtn.innerHTML = '&times;';
-  closeBtn.className = 'lightbox-close';
+    const closeBtn = document.createElement('span');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.className = 'lightbox-close';
 
-  const prevBtn = document.createElement('button');
-  prevBtn.innerHTML = '&#10094;';
-  prevBtn.className = 'lightbox-nav lightbox-prev';
-  prevBtn.addEventListener('click', showPrevImage);
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '&#10094;';
+    prevBtn.className = 'lightbox-nav lightbox-prev';
+    prevBtn.addEventListener('click', showPrevImage);
 
-  const nextBtn = document.createElement('button');
-  nextBtn.innerHTML = '&#10095;';
-  nextBtn.className = 'lightbox-nav lightbox-next';
-  nextBtn.addEventListener('click', showNextImage);
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = '&#10095;';
+    nextBtn.className = 'lightbox-nav lightbox-next';
+    nextBtn.addEventListener('click', showNextImage);
 
-  const lightboxAddToCart = document.createElement('button');
-  lightboxAddToCart.textContent = config.products.cd.addToCartText;
-  lightboxAddToCart.className = 'add-to-cart lightbox-add-to-cart';
+    const lightboxAddToCart = document.createElement('button');
+    lightboxAddToCart.textContent = config.products.cd.addToCartText;
+    lightboxAddToCart.className = 'add-to-cart lightbox-add-to-cart';
 
-  lightboxAddToCart.addEventListener('click', () => {
-    const currentImg = allImages[currentImageIndex];
-    const productId = currentImg.dataset.productId;
-    const productType = currentImg.dataset.productType;
-    const variantKey = currentImg.dataset.variantKey;
+    lightboxAddToCart.addEventListener('click', () => {
+      const currentImg = allImages[currentImageIndex];
+      const productId = currentImg.dataset.productId;
+      const productType = currentImg.dataset.productType;
+      const variantKey = currentImg.dataset.variantKey;
 
-    let productName = config.texts.defaultProduct;
-    let productPrice = 0;
+      let productName = config.texts.defaultProduct;
+      let productPrice = 0;
 
-    if (productId && config.products[productId]) {
-      const product = config.products[productId];
-
-      if (productType === 'single') {
-        // Single product (like CD)
-        productName = product.title;
-        productPrice = product.price;
-      } else if (productType === 'variant' && variantKey && product.variants && product.variants[variantKey]) {
-        // Product with variants (livret, bougies)
-        const variant = product.variants[variantKey];
-        productName = `${product.title} (${variant.name.toLowerCase()})`;
-        productPrice = variant.price || product.price;
-      } else if (productType === 'aquarelle') {
-        // Handle aquarelles with songs and colors
-        const song = currentImg.dataset.song;
-        const color = currentImg.dataset.color;
-        if (song && color) {
-          productName = `Aquarelle - ${song} (${color})`;
-          productPrice = product.price;
-        } else {
+      if (productId && config.products[productId]) {
+        const product = config.products[productId];
+        if (productType === 'single') {
           productName = product.title;
           productPrice = product.price;
+        } else if (productType === 'variant' && variantKey && product.variants && product.variants[variantKey]) {
+          const variant = product.variants[variantKey];
+          productName = `${product.title} (${variant.name.toLowerCase()})`;
+          productPrice = variant.price || product.price;
+        } else if (productType === 'aquarelle') {
+          const song = currentImg.dataset.song;
+          const color = currentImg.dataset.color;
+          if (song && color) {
+            productName = `Aquarelle - ${song} (${color})`;
+            productPrice = product.price;
+          } else {
+            productName = product.title;
+            productPrice = product.price;
+          }
         }
       }
+      addToCart(productName, 1, productPrice);
+      lightboxAddToCart.textContent = config.texts.added;
+      setTimeout(() => {
+        lightboxAddToCart.textContent = config.products.cd.addToCartText;
+      }, 2000);
+    });
+
+    // Assemble lightbox
+    lightboxControls.appendChild(prevBtn);
+    lightboxControls.appendChild(lightboxAddToCart);
+    lightboxControls.appendChild(nextBtn);
+    lightbox.appendChild(lightboxImg);
+    lightbox.appendChild(lightboxControls);
+    lightbox.appendChild(closeBtn);
+    document.body.appendChild(lightbox);
+
+    // Event listeners
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener('keydown', escapeKeyListener);
+
+    function closeLightbox() {
+      document.removeEventListener('keydown', escapeKeyListener);
+      document.body.removeChild(lightbox);
     }
-
-    addToCart(productName, 1, productPrice);
-    lightboxAddToCart.textContent = config.texts.added;
-    setTimeout(() => {
-      lightboxAddToCart.textContent = config.products.cd.addToCartText;
-    }, 2000);
-  });
-
-  lightboxControls.appendChild(prevBtn);
-  lightboxControls.appendChild(lightboxAddToCart);
-  lightboxControls.appendChild(nextBtn);
-  lightbox.appendChild(lightboxImg);
-  lightbox.appendChild(lightboxControls);
-  lightbox.appendChild(closeBtn);
-
-  document.body.appendChild(lightbox);
-
-  closeBtn.addEventListener('click', closeLightbox);
-  lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox) closeLightbox();
-  });
-
-  document.addEventListener('keydown', escapeKeyListener);
-
-  function closeLightbox() {
-    document.removeEventListener('keydown', escapeKeyListener);
-    document.body.removeChild(lightbox);
+    function escapeKeyListener(e) {
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') showPrevImage();
+      else if (e.key === 'ArrowRight') showNextImage();
+    }
+    function showPrevImage() {
+      currentImageIndex = (currentImageIndex - 1 + allImages.length) % allImages.length;
+      updateLightboxImage();
+    }
+    function showNextImage() {
+      currentImageIndex = (currentImageIndex + 1) % allImages.length;
+      updateLightboxImage();
+    }
+    function updateLightboxImage() {
+      const cur = allImages[currentImageIndex];
+      lightboxImg.src = cur.src;
+      lightboxImg.alt = cur.alt;
+    }
   }
-
-  function escapeKeyListener(e) {
-    if (e.key === 'Escape') closeLightbox();
-    else if (e.key === 'ArrowLeft') showPrevImage();
-    else if (e.key === 'ArrowRight') showNextImage();
-  }
-
-  function showPrevImage() {
-    currentImageIndex = (currentImageIndex - 1 + allImages.length) % allImages.length;
-    updateLightboxImage();
-  }
-
-  function showNextImage() {
-    currentImageIndex = (currentImageIndex + 1) % allImages.length;
-    updateLightboxImage();
-  }
-
-   function updateLightboxImage() {
-     const currentImg = allImages[currentImageIndex];
-     lightboxImg.src = currentImg.src;
-     lightboxImg.alt = currentImg.alt;
-   }
-}
 
 // Setup checkout button listener
 function setupCheckoutListener() {
@@ -888,7 +928,7 @@ function createCheckoutModal() {
       .checkout-modal {
         display: none;
         position: fixed;
-        z-index: 1000;
+        z-index: 1000000;
         left: 0;
         top: 0;
         width: 100%;
