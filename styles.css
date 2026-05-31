@@ -539,8 +539,7 @@ select:focus {
 }
 
 .lightbox-img {
-	max-width: 90%;
-	max-height: 80%;
+	height: 100%;
 	border-radius: 4px;
 	box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
 }
@@ -631,10 +630,11 @@ select:focus {
 }
 
 /* Badge position */
-.badge-relative {
-	position: relative;
-}
 
+.badge-relative {
+    position: relative;
+    max-height: 80%;
+}
 
 img {
 	transition: transform var(--transition);

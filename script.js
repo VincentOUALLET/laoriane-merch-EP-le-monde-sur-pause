@@ -714,44 +714,58 @@ function updateQuantityBadges() {
     const productImages = document.querySelectorAll('.product-image, .song-image');
 
     productImages.forEach(img => {
-      const badge = img.parentElement.querySelector('.quantity-badge');
-      if (badge) {
-        const src = img.src;
-        let quantity = 0;
+        const badge = img.parentElement.querySelector('.quantity-badge');
+        if (badge) {
+            const src = img.src;
+            let quantity = 0;
 
-        if (src.includes('Aquarelles')) {
-          // Aquarelles: per song and color
-          const song = img.dataset.song;
-          const color = img.dataset.color;
-          if (song && color) {
-            const cartItem = cart.find(item => item.name === `Aquarelle - ${song} (${color})`);
-            quantity = cartItem ? cartItem.quantity : 0;
-          }
-        } else if (src.includes('bougie')) {
-          // Bougies: differentiate petite and grande
-          const isPetite = src.includes('petite');
-          const size = isPetite ? 'petite' : 'grande';
-          const variant = config.products.bougies.variants[size];
-          const cartItem = cart.find(item => item.name === `${config.products.bougies.title} (${variant.name.toLowerCase()})`);
-          quantity = cartItem ? cartItem.quantity : 0;
-        } else if (src.toLowerCase().includes('livret')) {
-          // Livret: use variantKey to find specific variant
-          const variantKey = img.dataset.variantKey;
-          if (variantKey && config.products.livret.variants[variantKey]) {
-            const variant = config.products.livret.variants[variantKey];
-            const cartItem = cart.find(item => item.name === `${config.products.livret.title} (${variant.name.toLowerCase()})`);
-            quantity = cartItem ? cartItem.quantity : 0;
-          }
-        } else if (src.includes('CD')) {
-          // CD: single product
-          const cartItem = cart.find(item => item.name === config.products.cd.title);
-          quantity = cartItem ? cartItem.quantity : 0;
+            if (src.includes('Aquarelles')) {
+                // Aquarelles: per song and color
+                const song = img.dataset.song;
+                const color = img.dataset.color;
+                if (song && color) {
+                    const cartItem = cart.find(item => item.name === `Aquarelle - ${song} (${color})`);
+                    quantity = cartItem ? cartItem.quantity : 0;
+                }
+            } else if (src.includes('bougie')) {
+                // Bougies: differentiate petite and grande
+                const isPetite = src.includes('petite');
+                const size = isPetite ? 'petite' : 'grande';
+                const variant = config.products.bougies.variants[size];
+                const cartItem = cart.find(item => item.name === `${config.products.bougies.title} (${variant.name.toLowerCase()})`);
+                quantity = cartItem ? cartItem.quantity : 0;
+            } else if (src.toLowerCase().includes('livret')) {
+                // Livret: use variantKey to find specific variant
+                const variantKey = img.dataset.variantKey;
+                if (variantKey && config.products.livret.variants[variantKey]) {
+                    const variant = config.products.livret.variants[variantKey];
+                    const cartItem = cart.find(item => item.name === `${config.products.livret.title} (${variant.name.toLowerCase()})`);
+                    quantity = cartItem ? cartItem.quantity : 0;
+                }
+            } else if (src.includes('CD')) {
+                // CD: single product
+                const cartItem = cart.find(item => item.name === config.products.cd.title);
+                quantity = cartItem ? cartItem.quantity : 0;
+            }
+
+            badge.textContent = quantity;
+            badge.style.display = quantity > 0 ? 'flex' : 'none';
         }
-
-        badge.textContent = quantity;
-        badge.style.display = quantity > 0 ? 'flex' : 'none';
-      }
     });
+
+    // Also update lightbox badge if lightbox is open
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox) {
+        const lightboxImg = lightbox.querySelector('.lightbox-img');
+        if (lightboxImg) {
+            const lightboxBadge = lightbox.querySelector('.quantity-badge');
+            if (lightboxBadge) {
+                const quantity = getQuantityForImage(lightboxImg);
+                lightboxBadge.textContent = quantity;
+                lightboxBadge.style.display = quantity > 0 ? 'flex' : 'none';
+            }
+        }
+    }
 }
 
 // Helper to get quantity for an image element
@@ -808,6 +822,31 @@ function openLightbox(index, src, alt) {
     lightboxImg.src = src;
     lightboxImg.alt = alt;
     lightboxImg.className = 'lightbox-img'; // No carousel-image class
+    
+    // Copy dataset attributes from original image for quantity tracking
+    const currentImg = allImages[currentImageIndex];
+    lightboxImg.dataset.productId = currentImg.dataset.productId;
+    lightboxImg.dataset.productType = currentImg.dataset.productType;
+    lightboxImg.dataset.variantKey = currentImg.dataset.variantKey;
+    if (currentImg.dataset.song) {
+      lightboxImg.dataset.song = currentImg.dataset.song;
+    }
+    if (currentImg.dataset.color) {
+      lightboxImg.dataset.color = currentImg.dataset.color;
+    }
+
+    // Create wrapper for image and badge
+    const imageWrapper = document.createElement('div');
+    imageWrapper.className = 'badge-relative';
+
+    // Create and add quantity badge
+    const quantity = getQuantityForImage(lightboxImg);
+    const badge = document.createElement('span');
+    badge.className = 'quantity-badge';
+    badge.textContent = quantity;
+    badge.style.display = quantity > 0 ? 'flex' : 'none';
+    imageWrapper.appendChild(lightboxImg);
+    imageWrapper.appendChild(badge);
 
     // Controls container
     const lightboxControls = document.createElement('div');
@@ -858,56 +897,62 @@ function openLightbox(index, src, alt) {
           } else {
             productName = product.title;
             productPrice = product.price;
-          }
-        }
-      }
-      addToCart(productName, 1, productPrice);
-      lightboxAddToCart.textContent = config.texts.added;
-      setTimeout(() => {
-        lightboxAddToCart.textContent = config.products.cd.addToCartText;
-      }, 2000);
-    });
+     }
+         }
+       }
+       addToCart(productName, 1, productPrice);
+       lightboxAddToCart.textContent = config.texts.added;
+       setTimeout(() => {
+         lightboxAddToCart.textContent = config.products.cd.addToCartText;
+       }, 2000);
+     });
 
-    // Assemble lightbox
-    lightboxControls.appendChild(prevBtn);
-    lightboxControls.appendChild(lightboxAddToCart);
-    lightboxControls.appendChild(nextBtn);
-    lightbox.appendChild(lightboxImg);
-    lightbox.appendChild(lightboxControls);
-    lightbox.appendChild(closeBtn);
-    document.body.appendChild(lightbox);
+     // Assemble lightbox
+     lightboxControls.appendChild(prevBtn);
+     lightboxControls.appendChild(lightboxAddToCart);
+     lightboxControls.appendChild(nextBtn);
+     imageWrapper.appendChild(lightboxImg);
+     imageWrapper.appendChild(badge);
+     lightbox.appendChild(imageWrapper);
+     lightbox.appendChild(lightboxControls);
+     lightbox.appendChild(closeBtn);
+     document.body.appendChild(lightbox);
 
-    // Event listeners
-    closeBtn.addEventListener('click', closeLightbox);
-    lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) closeLightbox();
-    });
-    document.addEventListener('keydown', escapeKeyListener);
+     // Event listeners
+     closeBtn.addEventListener('click', closeLightbox);
+     lightbox.addEventListener('click', (e) => {
+       if (e.target === lightbox) closeLightbox();
+     });
+     document.addEventListener('keydown', escapeKeyListener);
 
-    function closeLightbox() {
-      document.removeEventListener('keydown', escapeKeyListener);
-      document.body.removeChild(lightbox);
-    }
-    function escapeKeyListener(e) {
-      if (e.key === 'Escape') closeLightbox();
-      else if (e.key === 'ArrowLeft') showPrevImage();
-      else if (e.key === 'ArrowRight') showNextImage();
-    }
-    function showPrevImage() {
-      currentImageIndex = (currentImageIndex - 1 + allImages.length) % allImages.length;
-      updateLightboxImage();
-    }
-    function showNextImage() {
-      currentImageIndex = (currentImageIndex + 1) % allImages.length;
-      updateLightboxImage();
-    }
-    function updateLightboxImage() {
-      const cur = allImages[currentImageIndex];
-      lightboxImg.src = cur.src;
-      lightboxImg.alt = cur.alt;
-    }
-  }
-
+     function closeLightbox() {
+       document.removeEventListener('keydown', escapeKeyListener);
+       document.body.removeChild(lightbox);
+     }
+     function escapeKeyListener(e) {
+       if (e.key === 'Escape') closeLightbox();
+       else if (e.key === 'ArrowLeft') showPrevImage();
+       else if (e.key === 'ArrowRight') showNextImage();
+     }
+     function showPrevImage() {
+       currentImageIndex = (currentImageIndex - 1 + allImages.length) % allImages.length;
+       updateLightboxImage();
+     }
+     function showNextImage() {
+       currentImageIndex = (currentImageIndex + 1) % allImages.length;
+       updateLightboxImage();
+     }
+     function updateLightboxImage() {
+       const cur = allImages[currentImageIndex];
+       lightboxImg.src = cur.src;
+       lightboxImg.alt = cur.alt;
+       // Update badge
+       const qty = getQuantityForImage(cur);
+       badge.textContent = qty;
+       badge.style.display = qty > 0 ? 'flex' : 'none';
+     }
+   }
+ 
 // Setup checkout button listener
 function setupCheckoutListener() {
   const checkoutBtn = document.querySelector('.checkout-btn');
