@@ -901,7 +901,13 @@ function openLightbox(index, src, alt) {
          }
        }
        addToCart(productName, 1, productPrice);
+       // refresh badge lightbox immediatly after adding to cart
+       const qty = getQuantityForImage(lightboxImg);
+       badge.textContent = qty;
+       badge.style.display = qty > 0 ? 'flex' : 'none';
+       
        lightboxAddToCart.textContent = config.texts.added;
+
        setTimeout(() => {
          lightboxAddToCart.textContent = config.products.cd.addToCartText;
        }, 2000);
@@ -947,7 +953,13 @@ function openLightbox(index, src, alt) {
        lightboxImg.src = cur.src;
        lightboxImg.alt = cur.alt;
        // Update badge
-       const qty = getQuantityForImage(cur);
+       lightboxImg.dataset.productId = cur.dataset.productId;
+       lightboxImg.dataset.productType = cur.dataset.productType;
+       lightboxImg.dataset.variantKey = cur.dataset.variantKey;
+       lightboxImg.dataset.song = cur.dataset.song;
+       lightboxImg.dataset.color = cur.dataset.color;
+
+      const qty = getQuantityForImage(lightboxImg);
        badge.textContent = qty;
        badge.style.display = qty > 0 ? 'flex' : 'none';
      }
