@@ -569,12 +569,12 @@ select:focus {
 	font-size: 1.1rem;
 	border-radius: 4px;
 	cursor: pointer;
-	transition: background-color var(--transition);
+	transition: all var(--transition);
 	font-weight: bold;
 }
 
 .lightbox-nav {
-	background-color: rgba(255, 255, 255, 0.2);
+	background-color: white;
 	color: white;
 	border: none;
 	font-size: 2rem;
@@ -582,28 +582,37 @@ select:focus {
 	height: 50px;
 	border-radius: 50%;
 	cursor: pointer;
-	transition: background-color var(--transition);
+	transition: all var(--transition);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
 .lightbox-nav:hover {
-	background-color: rgba(255, 255, 255, 0.3);
+	transform: scale(1.1);
 }
 
 .lightbox-prev {
 	position: absolute;
 	left: 20px;
 	top: 50%;
-	transform: translateY(-50%);
+	/* transform: rotate(180deg); */
 }
 
 .lightbox-next {
 	position: absolute;
 	right: 20px;
 	top: 50%;
-	transform: translateY(-50%);
+}
+
+.lightbox-next svg {
+	position: relative;
+    left: 3px;
+}
+
+.lightbox-prev svg {
+	position: relative;
+    right: 3px;
 }
 
 .product-leave {
