@@ -843,3 +843,12 @@ img:not(.lightbox-img):hover {
 #lydia-button:hover {
 	background-color: var(--secondary-color);
 }
+
+/* <div class="image-wrapper badge-relative" style="
+    background-image: url(&quot;/PHOTOS\ MERCH\ EP/bougie\ grande.jpg&quot;);
+    height: 400px;
+    background-size: 140%;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 300px;
+"><span class="quantity-badge" style="display: none;">0</span></div> */
