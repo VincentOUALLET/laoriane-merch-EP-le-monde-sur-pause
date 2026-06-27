@@ -68,8 +68,9 @@ const config = {
     "cd": {
       "id": "cd",
       "title": "CD Physique",
-      "description": "Mini-album de 6 titres. Photographie : Alicia Aubrée. Graphisme : Eva Urbany",
-      "price": 10,
+      description: `Le monde sur pause est mon premier mini-album de 6 titres, sorti en avril 2025. Les chansons ont été écrites par moi-même, et réalisées en tout petit comité, avec Nathan Cocherie. Ce sont des chansons douces, feutrées, contemplatives, qui parlent de la beauté du monde et de ce qui vit dessus.
+Tout s’est fait dans une sphère proche et intime : mon amie Alicia Aubrée est à la photographie, mon amie Eva Urbany est au graphisme, mon amoureux Vincent Ouallet m’accompagne au chant.`,
+      "price": 8,
       "inCarousel": true,
       "componentType": "productSection",
       "images": [
@@ -87,9 +88,11 @@ const config = {
     "livret": {
       "id": "livret",
       "title": "Livret de paroles et poèmes",
-      "description": "Carnet relié à la main par Laoriane. Contient les paroles des chansons et une vingtaine de poèmes. Dimensions A6 : 10,5 x 15cm.",
+      description: `Le livret est un complément aux textes des chansons, on y retrouve les aquarelles réalisées par mon amie Lucie Bigaud, les paroles des chansons, et surtout, des poèmes inédits. Les thématiques tournent autour de celles du disque : la beauté et les failles du monde, notre place la dedans entre travail et oisiveté, ambitions et tranquillités.
+Le livret est fait et relié à la main par moi-même. Il est disponible en 3 coloris : bordeaux, vert bleu, violet fleuris.
+Dimensions A6 : 10,5 x 15cm`,
       "colorOptions": "Existe en 3 coloris : vert bleu, bordeaux, violet fleuris.",
-      "price": 15,
+      "price": 13,
       "inCarousel": true,
       "componentType": "productSection",
       "variants": {
@@ -113,9 +116,10 @@ const config = {
     "aquarelles": {
       "id": "aquarelles",
       "title": "Aquarelles",
-      "description": "Format carte postale, A6. 6 illustrations, une par chanson.",
-      "description2": "Disponible avec la phrase écrite en noire, ou la phrase écrite en couleur. Aquarelles : Lucie Bigaud. Graphisme : Eva Urbany",
-      "price": 3,
+      "description": `Pour mettre en image chacune des chansons, j’ai fait appel à mon amie aquarelliste Lucie Bigaud. Les phrases sont écrites avec une police originale créée par Eva Urbany et sont extraites des chansons en question.`,
+      "description2": `Dimensions : 10,5 x 15cm (format carte postal, A6)
+Au choix : phrase écrite en noire ou en couleur`,
+      "price": 2,
       "inCarousel": true,
       "componentType": "productSection",
       "songs": {
@@ -165,18 +169,20 @@ const config = {
     "bougies": {
       "id": "bougies",
       "title": "Bougies fleuries",
-      "description": "Faites main. Bougies réalisées dans des pots de récup. Cire de soja et fleurs séchées au dessus. Mèche en coton. Chaque bougie est unique et les photos en sont un exemple. Deux tailles : petite (pot de yaourt), grande (pot de confiture)",
+      "description": `Les bougies sont faites mains avec des mèches en coton et de la cire de soja, dans des pots de récup.
+Chaque bougie est unique, les couleurs des fleurs et leurs positionnements sont aléatoires et ne correspondent pas forcément aux photos ci-dessus.
+Tailles au choix : petite (type pot de yaourt), grande (type pot de confiture)`,
       "inCarousel": true,
       "componentType": "productSection",
       "variants": {
         "petite": {
-          "name": "Petite bougie",
-          "price": 5,
+          "name": "Petite bougie (type pot de yaourt)",
+          "price": 4,
           "image": "PHOTOS MERCH EP/bougie petite.jpg"
         },
         "grande": {
-          "name": "Grande bougie",
-          "price": 8,
+          "name": "Grande bougie (type pot de confiture)",
+          "price": 7,
           "image": "PHOTOS MERCH EP/bougie grande.jpg"
         }
       },
